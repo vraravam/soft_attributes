@@ -1,0 +1,55 @@
+= SoftAttributes
+
+Calculated fields are usually not stored in the database. But, in many cases, you would want to
+treat them just like attributes - serializing them into the xml/json representation, discarding them
+if they appear on the incoming xml/json payloads, lazily initializing them (in case you are loading
+them from an expensive ActiveResource call), etc. You will also want to access them by either methods
+or [] notation.
+
+== GOALS
+
+The major distinguishing features of SoftAttributes are:
+
+* To not pollute the attributes hash by putting non-persisted variables in them.
+* But at the same time, to maintain a list of attributes that can get accessed.
+* These attributes could be lazily loaded (and cached in the instance, once they
+  are retrieved - to avoid multiple ActiveResource calls)
+* To provide an easy way to inject them into the xml/json payload as needed.
+
+== EXAMPLE
+
+class Foo
+  #will define a setter method that ignores the param
+  noop_setter :bar
+end
+
+== API DOCUMENTATION
+
+== CONTRIBUTORS
+
+* {Vijay Aravamudhan}[http://github.com/vraravam]
+
+== LICENSE
+
+(The MIT License)
+
+Copyright (c) 2010 Vijay Aravamudhan
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
