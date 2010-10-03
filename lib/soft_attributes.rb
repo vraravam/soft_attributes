@@ -1,0 +1,2 @@
+module SoftAttributes
+end
