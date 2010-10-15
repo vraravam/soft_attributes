@@ -2,6 +2,24 @@ module SoftAttributes
   module Base
     def self.included(base)
       base.class_eval do
+        def to_xml_with_soft_attributes(opts={})
+          attributes_to_include = []
+          self.class.soft_attributes.each do |k, v|
+            next if !v.has_key?(:include_in_xml)
+            if v[:include_in_xml].is_a?(Proc)
+              attributes_to_include << k if !v[:include_in_xml].call(self).nil?
+            else
+              attributes_to_include << k if v[:include_in_xml] == true
+            end
+          end
+          to_xml_without_soft_attributes(opts) do |xml|
+            attributes_to_include.each do |attr|
+              xml.tag!(attr, self.send(attr))
+            end
+          end
+        end
+        alias_method_chain :to_xml, :soft_attributes
+
         extend SoftAttributes::Base::ClassMethods
         include SoftAttributes::Base::InstanceMethods
       end
