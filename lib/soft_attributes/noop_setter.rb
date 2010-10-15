@@ -14,6 +14,7 @@ module SoftAttributes
   end
 end
 
+# TODO: maybe we could send this on ActiveSupport
 require 'active_record'
 require 'active_resource'
 ActiveRecord::Base.send(:include, SoftAttributes::NoopSetter)
