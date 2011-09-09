@@ -7,6 +7,7 @@ Gem::Specification.new do |s|
   s.name = 'soft_attributes'
   s.summary = 'A library for ensuring that calculated attributes are initialized lazily and serialized/de-serialized correctly.'
   s.version = SoftAttributes::VERSION
+  s.platform    = Gem::Platform::RUBY
   s.description = <<-EOS
     SoftAttributes provides a consistent way to define "soft" attributes on ActiveSupport.
     Typically calculated (non-persisted) attributes would be termed soft attributes.
