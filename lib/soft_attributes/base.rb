@@ -31,10 +31,12 @@ module SoftAttributes
         attr = args.first
         options.assert_valid_keys(:include_in_xml, :value)
 
-        send(:noop_setter, attr)
+        __send__(:noop_setter, attr)
         soft_attributes[attr.to_s] = options.slice(:include_in_xml, :value)
       end
 
+      # TODO: Convert to instance method
+      # TODO: Convert to use write_inheritable_attributes && read_inheritable_attributes
       def soft_attributes
         @soft_attributes ||= {}
       end
@@ -48,12 +50,25 @@ module SoftAttributes
 
       private
       def method_missing(method_symbol, *parameters) #:nodoc:
-        return self.class.soft_attributes[extract_attr_name_without_equals(method_symbol)][:value].call(self) if respond_to?(method_symbol) && method_symbol.to_s.last != '=' #getter
+        if respond_to?(method_symbol) && !method_symbol.to_s.end_with?("=") #getter
+          attr_name = extract_attr_name_without_equals(method_symbol)
+          if self.class.soft_attributes.has_key?(attr_name)
+            value = self.class.soft_attributes[attr_name][:value]
+            if value.is_a?(Proc)
+              return value.call(self)
+            else
+              return value
+            end
+          end
+        end
         super
       end
 
       def extract_attr_name_without_equals(method_symbol) #:nodoc:
-        method_symbol.to_s.last == '=' ? method_symbol.to_s.first(-1) : method_symbol.to_s
+        str = method_symbol.to_s
+        attr_name = str.end_with?("=") ? str.chop : str
+        attr_name.slice!(0) if attr_name.start_with?("_")
+        attr_name
       end
     end
   end

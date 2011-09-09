@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper', __FILE__)
 
-class Foo
+class Bar
   include SoftAttributes::NoopSetter
 
   noop_setter :foo
@@ -10,12 +10,12 @@ end
 describe SoftAttributes::NoopSetter do
   it "should define noop setters for a single attribute" do
     ["foo=", "bar=", "baz="].each do |method|
-      Foo.public_instance_methods.include?(method).should be_true
+      Bar.public_instance_methods.include?(method.to_sym).should be_true
     end
   end
 
   it "should accept parameters for the generated setter methods" do
-    f = Foo.new
+    f = Bar.new
     lambda {
       f.foo = "qwerty"
       f.bar = "asdfg"

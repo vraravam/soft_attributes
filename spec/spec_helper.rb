@@ -2,19 +2,23 @@
 # from the project root directory.
 ENV["RAILS_ENV"] = "test"
 
-require File.expand_path(File.dirname(__FILE__) + '/../../../../config/environment')
-require 'spec'
-require 'spec/rails'
+require 'rubygems'
+require 'bundler/setup'
 require 'mocha'
-require File.dirname(__FILE__) + "/../lib/soft_attributes"
+require "nokogiri"
+require "webrat/core/matchers/have_tag"
+require 'soft_attributes'
 
-Spec::Runner.configure do |config|
-  config.use_transactional_fixtures = true
-  config.use_instantiated_fixtures  = false
-  config.fixture_path = RAILS_ROOT + '/vendor/plugins/soft_attributes/spec/fixtures/'
+RSpec.configure do |config|
   config.mock_with :mocha
+  config.include(Webrat::Matchers)
+  config.include(Webrat::HaveTagMatcher)
+  include Webrat::HaveTagMatcher
 
   config.before(:all) do
+    `touch db/test.sqlite3`
+    ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :encoding => "utf8", :database => "db/test.sqlite3")
+
     ActiveRecord::Base.connection.create_table :soft_attributes_items, :force => true do |t|
       t.string :name
       t.timestamps
@@ -23,6 +27,7 @@ Spec::Runner.configure do |config|
 
   config.after(:all) do
     ActiveRecord::Base.connection.drop_table :soft_attributes_items
+    `rm -f db/test.sqlite3`
   end
 
   config.before(:each) do

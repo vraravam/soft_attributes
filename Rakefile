@@ -1,17 +1,6 @@
-require 'rake'
-require 'spec/rake/spectask'
-require 'rcov/rcovtask'
+require 'bundler/gem_tasks'
+require 'rspec/core/rake_task'
+
+RSpec::Core::RakeTask.new(:spec)
 
 task :default => :spec
-
-Spec::Rake::SpecTask.new do |t|
-  t.spec_opts = ['--options', 'spec/spec.opts']
-end
-
-require 'rcov/version'
-
-Rcov::RcovTask.new do |t|
-  t.pattern = "spec/**/_spec.rb"
-  t.rcov_opts = [ "--spec-only" ]
-  t.output_dir = "coverage"
-end
