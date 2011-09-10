@@ -14,6 +14,10 @@ class Foo < ActiveRecord::Base
   end
 end
 
+class Ping < ActiveRecord::Base
+  soft_attribute :krishna, :value => "sis"
+end
+
 describe SoftAttributes::Base do
   before(:all) do
     connection = ActiveRecord::Base.connection
@@ -22,6 +26,10 @@ describe SoftAttributes::Base do
         t.string :name
         t.string :application
       end
+
+      connection.create_table(:pings) do |t|
+        t.string :name
+      end
     rescue Exception => e
       RAILS_DEFAULT_LOGGER.warn "Error in before(:each): #{e}" if defined?(RAILS_DEFAULT_LOGGER)
     end
@@ -29,7 +37,9 @@ describe SoftAttributes::Base do
 
   after(:all) do
     begin
-      Foo.connection.drop_table(Foo.table_name)
+      connection = ActiveRecord::Base.connection
+      connection.drop_table(Foo.table_name)
+      connection.drop_table(Ping.table_name)
     rescue Exception => e
       RAILS_DEFAULT_LOGGER.warn "Error in after(:each): #{e}" if defined?(RAILS_DEFAULT_LOGGER)
     end
@@ -68,6 +78,20 @@ describe SoftAttributes::Base do
   it "should not need a Proc for the value" do
     foo = Foo.new
     foo.rakshita.should == "child"
+  end
+
+  it "should not pollute the attributes from one instance with another" do
+    f1 = Foo.new
+    f2 = Foo.new
+    f1.soft_attributes.object_id.should_not == f2.soft_attributes.object_id
+    f1.soft_attributes.merge!({:a => "b"})
+    f3 = Foo.new
+    f3.soft_attributes.should_not have_key(:a)
+  end
+
+  it "should not pollute the attributes from a different class" do
+    Foo.soft_attributes.should_not == Ping.soft_attributes
+    Foo.new.soft_attributes.should_not == Ping.new.soft_attributes
   end
 
   describe "to_xml" do

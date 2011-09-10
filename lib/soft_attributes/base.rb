@@ -2,9 +2,10 @@ module SoftAttributes
   module Base
     def self.included(base)
       base.class_eval do
+        # TODO: Support serializable_hash (rails 3)
         def to_xml_with_soft_attributes(opts={})
           attributes_to_include = []
-          self.class.soft_attributes.each do |k, v|
+          self.soft_attributes.each do |k, v|
             next if !v.has_key?(:include_in_xml)
             if v[:include_in_xml].is_a?(Proc)
               attributes_to_include << k if !v[:include_in_xml].call(self).nil?
@@ -35,31 +36,34 @@ module SoftAttributes
         soft_attributes[attr.to_s] = options.slice(:include_in_xml, :value)
       end
 
-      # TODO: Convert to instance method
-      # TODO: Convert to use write_inheritable_attributes && read_inheritable_attributes
       def soft_attributes
-        @soft_attributes ||= {}
+        read_inheritable_attribute(:soft_attributes) || write_inheritable_hash(:soft_attributes, {})
       end
     end
 
     module InstanceMethods
+      def soft_attributes
+        @soft_attributes ||= self.class.soft_attributes.clone
+        @soft_attributes.stringify_keys!
+        @soft_attributes
+      end
+
+      def soft_attributes=(new_value)
+        soft_attributes.merge!(new_value)
+        soft_attributes   # return the merged hash
+      end
+
       def respond_to?(method_symbol, include_private = false) #:nodoc:
         attr_name = extract_attr_name_without_equals(method_symbol)
-        self.class.soft_attributes.has_key?(attr_name) || super
+        self.soft_attributes.has_key?(attr_name) || super
       end
 
       private
       def method_missing(method_symbol, *parameters) #:nodoc:
         if respond_to?(method_symbol) && !method_symbol.to_s.end_with?("=") #getter
           attr_name = extract_attr_name_without_equals(method_symbol)
-          if self.class.soft_attributes.has_key?(attr_name)
-            value = self.class.soft_attributes[attr_name][:value]
-            if value.is_a?(Proc)
-              return value.call(self)
-            else
-              return value
-            end
-          end
+          value = self.soft_attributes[attr_name][:value]
+          return value.is_a?(Proc) ? value.call(self) : value
         end
         super
       end
@@ -67,14 +71,14 @@ module SoftAttributes
       def extract_attr_name_without_equals(method_symbol) #:nodoc:
         str = method_symbol.to_s
         attr_name = str.end_with?("=") ? str.chop : str
-        attr_name.slice!(0) if attr_name.start_with?("_")
+        attr_name.slice!(0) if attr_name.start_with?("_")   # Rails 3 compatibility
         attr_name
       end
     end
   end
 end
 
-# TODO: maybe we could send this on ActiveSupport
+# TODO: maybe we could send this on ActiveModel?
 require 'active_record'
 require 'active_resource'
 ActiveRecord::Base.send(:include, SoftAttributes::Base)
