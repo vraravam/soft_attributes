@@ -2,17 +2,13 @@ module SoftAttributes
   module Base
     def self.included(base)
       base.class_eval do
-        # TODO: Support serializable_hash (rails 3)
         def to_xml_with_soft_attributes(opts={})
-          attributes_to_include = []
-          self.soft_attributes.each do |k, v|
-            next if !v.has_key?(:include_in_xml)
-            if v[:include_in_xml].is_a?(Proc)
-              attributes_to_include << k if !v[:include_in_xml].call(self).nil?
-            else
-              attributes_to_include << k if v[:include_in_xml] == true
+          attributes_to_include = self.soft_attributes.clone.with_indifferent_access.collect do |k, v|
+            include_in_xml = v[:include_in_xml]
+            if include_in_xml.present?
+              k if (include_in_xml.is_a?(Proc) ? include_in_xml.call(self) : include_in_xml == true)
             end
-          end
+          end.compact
           to_xml_without_soft_attributes(opts) do |xml|
             attributes_to_include.each do |attr|
               xml.tag!(attr, self.send(attr))
@@ -20,6 +16,8 @@ module SoftAttributes
           end
         end
         alias_method_chain :to_xml, :soft_attributes
+
+        # TODO: Should we support to_json here?
 
         extend SoftAttributes::Base::ClassMethods
         include SoftAttributes::Base::InstanceMethods
@@ -62,8 +60,10 @@ module SoftAttributes
       def method_missing(method_symbol, *parameters) #:nodoc:
         if respond_to?(method_symbol) && !method_symbol.to_s.end_with?("=") #getter
           attr_name = extract_attr_name_without_equals(method_symbol)
-          value = self.soft_attributes[attr_name][:value]
-          return value.is_a?(Proc) ? value.call(self) : value
+          if self.soft_attributes.has_key?(attr_name)
+            value = self.soft_attributes[attr_name][:value]
+            return value.is_a?(Proc) ? value.call(self) : value
+          end
         end
         super
       end
