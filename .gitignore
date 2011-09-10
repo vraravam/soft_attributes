@@ -1,4 +1,5 @@
 .rvmrc
+*.gem
 db/*.sqlite3
 
 # rcov generated
